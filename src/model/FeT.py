@@ -16,6 +16,7 @@ from sklearn.decomposition import PCA
 from .PosEncoding import LearnableFourierPositionalEncoding
 
 from contextlib import contextmanager
+from src.attack import ByzantineAttacker, AttackStrategy
 
 
 
@@ -187,7 +188,7 @@ class FeT(nn.Module):
                  num_heads: int = 1, dropout: float = 0.1, party_dropout: float = 0.0, n_embeddings: int = None,
                  activation: str = 'gelu', out_activation: Callable = None,
                  n_local_blocks: int = 1, n_agg_blocks: int = 1, primary_party_id: int = 0, k=1,
-                 rep_noise=None, max_rep_norm=None, enable_pe=True, enable_dm=True):
+                 rep_noise=None, max_rep_norm=None, enable_pe=True, enable_dm=True, byzantine_attacker= None):
         """
         FedTrans model.
         :param n_local_blocks:
@@ -237,6 +238,7 @@ class FeT(nn.Module):
         self.rep_noise = rep_noise
         self.max_rep_norm = max_rep_norm
         self.enable_pe = enable_pe
+        self.byzantine_attacker = byzantine_attacker
         self.enable_dm = enable_dm
 
         self.n_parties = len(key_dims)

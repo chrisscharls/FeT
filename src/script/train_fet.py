@@ -12,6 +12,8 @@ import torch_optimizer as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+
+
 # add src to python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -25,7 +27,7 @@ from src.train.Fit import fit
 from src.utils.BasicUtils import (PartyPath, get_metric_from_str, get_metric_positive_from_str)
 from src.utils.logger import CommLogger
 from src.model.FeT import FeT
-
+from src.attack import ByzantineAttacker, AttackStrategy
 # Avoid "Too many open files" error
 torch.multiprocessing.set_sharing_strategy('file_system')
 
@@ -210,6 +212,15 @@ if __name__ == '__main__':
         loss_fn = nn.CrossEntropyLoss()
         out_dim = args.n_classes
         out_activation = None  # No need for softmax since it is included in CrossEntropyLoss
+    
+
+
+    # Create attacker
+    attacker = ByzantineAttacker(
+        strategy=AttackStrategy.ZERO,  # or SIGN_FLIP, RANDOM_NOISE, etc.
+        attack_strength=1.0,
+        malicious_parties=[1, 2]  # Which parties are malicious
+    )
 
     model = FeT(key_dims=train_dataset.local_key_channels, data_dims=train_dataset.local_input_channels,
                 out_dim=out_dim, data_embed_dim=args.data_embed_dim,
@@ -219,7 +230,7 @@ if __name__ == '__main__':
                 n_embeddings=None, out_activation=out_activation,
                 n_local_blocks=args.n_local_blocks, n_agg_blocks=args.n_agg_blocks, k=args.knn_k,
                 rep_noise=args.dp_noise, max_rep_norm=args.dp_clip, enable_pe=not args.disable_pe,
-                enable_dm=not args.disable_dm)
+                enable_dm=not args.disable_dm, byzantine_attacker=attacker)
     # model = torch.compile(model)
 
     # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
