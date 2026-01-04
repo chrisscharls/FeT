@@ -394,6 +394,15 @@ class FeT(nn.Module):
         # key_X_embeds[self.primary_party_id] = primary_key_X_embed.repeat(1, self.k, 1)
         secondary_key_X_embeds = [key_X_embeds[i] for i in range(self.n_parties) if i != self.primary_party_id]
 
+        if self.byzantine_attacker is not None:
+            from src.attack import apply_byzantine_attack
+            secondary_key_X_embeds = apply_byzantine_attack(
+                secondary_reps=secondary_key_X_embeds,
+                attacker=self.byzantine_attacker,
+                primary_party_id=self.primary_party_id,
+                n_parties=self.n_parties
+            )
+
         # dropout self.dropout number of parties
         if self.training and not np.isclose(self.party_dropout, 0):
             n_drop_parties = int((self.n_parties - 1) * self.party_dropout)
