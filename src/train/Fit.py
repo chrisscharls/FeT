@@ -29,6 +29,13 @@ def preprocess_Xs_y_temp(Xs, y, device, task, solo=False, has_key=False, duplica
     concated_Xs = [Xi[1].squeeze(1) for Xi in Xs] # shape [128, 1, 2317] --> [128, 2317]
     return concated_Xs, y
 
+def accuracy_fn(y_true, y_pred):
+    """
+    y_true, y_pred: numpy arrays (flattened)
+    """
+    y_true = y_true.reshape(-1)
+    y_pred = y_pred.reshape(-1)
+    return (y_true == y_pred).mean()
 
 def preprocess_Xs_y(Xs, y, device, task, solo=False, has_key=False, duplicate_y=None):
     # pdbr.set_trace()
@@ -129,6 +136,8 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
             train_pred_y_array = y_scaler.inverse_transform(train_pred_y_array.reshape(-1, 1)).reshape(-1)
         # pdbr.set_trace()
         train_score = metric_fn(train_y_array, train_pred_y_array)
+        train_accuracy = accuracy_fn(train_y_array, train_pred_y_array)
+        print(f"Train Accuracy: {train_accuracy *100:.2f}%")
 
         timestamp_now = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime("%Y-%m-%d %H:%M:%S")
         print(timestamp_now, f"Epoch: {epoch}, Train Loss: {train_loss / len(train_loader)}, Train Score: {train_score}")
@@ -190,6 +199,8 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
                     scaled_val_y_pred_array = val_y_pred_array
                 try:
                     val_score = metric_fn(scaled_val_y_array, scaled_val_y_pred_array)
+                    val_accuracy = accuracy_fn(scaled_val_y_array, scaled_val_y_pred_array)
+                    print(f"Val Accuracy: {val_accuracy *100:.2f}%")
                 except ValueError as e:
                     print(f"Error: {e}")
                     raise e
@@ -244,6 +255,8 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
                     scaled_test_y_pred_array = test_y_pred_array
                 try:
                     test_score = metric_fn(scaled_test_y_array, scaled_test_y_pred_array)
+                    test_accuracy = accuracy_fn(scaled_test_y_array, scaled_test_y_pred_array)
+                    print(f"Test Accuracy: {test_accuracy *100:.2f}%")
                 except ValueError as e:
                     print(f"Error: {e}")
                     raise e
