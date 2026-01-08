@@ -440,22 +440,24 @@ class FeT(nn.Module):
                      .to(cut_layer_key_X_flat.device))
             cut_layer_key_X_flat += noise
             cut_layer_key_X = cut_layer_key_X_flat.reshape(cut_layer_key_X_flat.shape[0], -1, self.data_embed_dim)
+
+            # Apply Byzantine attack AFTER aggregation of secondary parties (on the summed secondary representation)
+            if self.byzantine_attacker is not None:
+                cut_layer_key_X = self.byzantine_attacker.attack_representation(cut_layer_key_X)
         else:
             cut_layer_key_X = torch.sum(torch.stack(secondary_key_X_embeds), dim=0)
 
-        # primary party aggregates the embedding with primary_attn from summed cut keys and data
+            # Apply Byzantine attack AFTER aggregation of secondary parties (on the summed secondary representation)
+            if self.byzantine_attacker is not None:
+                cut_layer_key_X = self.byzantine_attacker.attack_representation(cut_layer_key_X)
+
+        # primary party aggregates the embedding with primary_attn from summed (possibly attacked) secondary keys and data
         agg_key_X_embed = self.agg_attn(primary_key_X_embed,
                                         (cut_layer_key_X) / (self.n_parties - n_drop_parties - 1),
                                         need_weights=visualize, key_padding_mask=masks[self.primary_party_id])
 
         # # debug: ignore secondary parties
         # agg_key_X_embed = self.agg_attn(primary_key_X_embed, primary_key_X_embed, need_weights=visualize)
-
-        # 🔥 BYZANTINE ATTACK — POST AGGREGATION (CRITICAL)
-        if self.byzantine_attacker is not None:
-            agg_key_X_embed = self.byzantine_attacker.attack_representation(
-                agg_key_X_embed
-            )
 
         # output layer
         output = self.output_layer(agg_key_X_embed.reshape(agg_key_X_embed.shape[0], -1))
