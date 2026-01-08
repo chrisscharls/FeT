@@ -451,6 +451,12 @@ class FeT(nn.Module):
         # # debug: ignore secondary parties
         # agg_key_X_embed = self.agg_attn(primary_key_X_embed, primary_key_X_embed, need_weights=visualize)
 
+        # 🔥 BYZANTINE ATTACK — POST AGGREGATION (CRITICAL)
+        if self.byzantine_attacker is not None:
+            agg_key_X_embed = self.byzantine_attacker.attack(
+                agg_key_X_embed
+            )
+
         # output layer
         output = self.output_layer(agg_key_X_embed.reshape(agg_key_X_embed.shape[0], -1))
         if self.out_activation is not None:
