@@ -453,7 +453,7 @@ class FeT(nn.Module):
 
         # 🔥 BYZANTINE ATTACK — POST AGGREGATION (CRITICAL)
         if self.byzantine_attacker is not None:
-            agg_key_X_embed = self.byzantine_attacker.attack(
+            agg_key_X_embed = self.byzantine_attacker.attack_representation(
                 agg_key_X_embed
             )
 
