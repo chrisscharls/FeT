@@ -396,6 +396,8 @@ class FeT(nn.Module):
         secondary_key_X_embeds = [key_X_embeds[i] for i in range(self.n_parties) if i != self.primary_party_id]
 
         
+        print("n_parties:", self.n_parties)
+        print("secondary parties:", len(secondary_key_X_embeds))
 
         if self.byzantine_attacker is not None:
             from src.attack import apply_byzantine_attack
