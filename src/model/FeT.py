@@ -395,10 +395,7 @@ class FeT(nn.Module):
         # key_X_embeds[self.primary_party_id] = primary_key_X_embed.repeat(1, self.k, 1)
         secondary_key_X_embeds = [key_X_embeds[i] for i in range(self.n_parties) if i != self.primary_party_id]
 
-        
-        print("n_parties:", self.n_parties)
-        print("secondary parties:", len(secondary_key_X_embeds))
-
+       
         if self.byzantine_attacker is not None:
             from src.attack import apply_byzantine_attack
             secondary_key_X_embeds = apply_byzantine_attack(
@@ -419,8 +416,8 @@ class FeT(nn.Module):
         mad = torch.median(torch.abs(party_norms_tensor - median)) + 1e-6
 
         z_scores = torch.abs(party_norms_tensor - median) / mad
-        print(z_scores)
-        threshold = 1.5  # robust z-score threshold
+   
+        threshold = 3.5  # robust z-score threshold
         malicious_indices = torch.where(z_scores > threshold)[0]
 
         if len(malicious_indices) > 0:
