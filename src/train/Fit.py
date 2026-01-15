@@ -143,6 +143,17 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
 
         timestamp_now = datetime.datetime.now(pytz.timezone('Asia/Shanghai')).strftime("%Y-%m-%d %H:%M:%S")
         print(timestamp_now, f"Epoch: {epoch}, Train Loss: {train_loss / len(train_loader)}, Train Score: {train_score}")
+        if hasattr(model, "detected_malicious"):
+            if len(model.detected_malicious) > 0:
+                print(
+                    f"[Epoch {epoch}] Byzantine parties detected: "
+                    f"{sorted(model.detected_malicious)}"
+                )
+            else:
+                print(f"[Epoch {epoch}] No Byzantine parties detected")
+
+            # reset for next epoch
+            model.detected_malicious.clear()
         if hasattr(model, 'comm_logger'):
             model.comm_logger.save_log()
         if writer is not None:

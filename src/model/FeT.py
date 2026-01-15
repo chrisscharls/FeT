@@ -252,6 +252,9 @@ class FeT(nn.Module):
             raise ValueError(f"Unsupported activation function: {activation}, "
                              f"expecting one of ['relu', 'gelu', 'leakyrelu']")
 
+        self.detected_malicious = set()
+
+
         # positional encoding
         self.positional_encodings = nn.ModuleList()
         for key_dim, data_dim in zip(key_dims, data_dims):
@@ -425,7 +428,7 @@ class FeT(nn.Module):
                 i if i < self.primary_party_id else i + 1
                 for i in malicious_indices.tolist()
             ]
-            print(f"[Byzantine Detection] Malicious parties detected: {real_party_ids}")
+            self.detected_malicious.update(real_party_ids)
 
 
 
