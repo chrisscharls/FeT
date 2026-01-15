@@ -331,7 +331,7 @@ class FeT(nn.Module):
                                  f"the feature dimension {X_dim} of the same party.")
 
     def forward(self, key_Xs, visualize=True):
-        print("hello")
+   
         """
         Forward function of FedTrans
         :param key_Xs: [(k1, X1), ..., (kn, Xn)], where n is the number of parties. ki is the key and Xi is the
@@ -418,7 +418,7 @@ class FeT(nn.Module):
 
         z_scores = torch.abs(party_norms_tensor - median) / mad
 
-        threshold = 3.5  # robust z-score threshold
+        threshold = 1.5  # robust z-score threshold
         malicious_indices = torch.where(z_scores > threshold)[0]
 
         if len(malicious_indices) > 0:
