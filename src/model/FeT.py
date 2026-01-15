@@ -441,9 +441,6 @@ class FeT(nn.Module):
             cut_layer_key_X_flat += noise
             cut_layer_key_X = cut_layer_key_X_flat.reshape(cut_layer_key_X_flat.shape[0], -1, self.data_embed_dim)
 
-            # Apply Byzantine attack AFTER aggregation of secondary parties (on the summed secondary representation)
-            if self.byzantine_attacker is not None:
-                cut_layer_key_X = self.byzantine_attacker.attack_representation(cut_layer_key_X)
         else:
             cut_layer_key_X = torch.sum(torch.stack(secondary_key_X_embeds), dim=0)
 
