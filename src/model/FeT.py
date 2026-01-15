@@ -330,7 +330,8 @@ class FeT(nn.Module):
                 raise ValueError(f"The #features of the {i}-th feature tensor {X.shape[-1]} should be the same as "
                                  f"the feature dimension {X_dim} of the same party.")
 
-    def forward(self, key_Xs, visualize=False):
+    def forward(self, key_Xs, visualize=True):
+        print("hello")
         """
         Forward function of FedTrans
         :param key_Xs: [(k1, X1), ..., (kn, Xn)], where n is the number of parties. ki is the key and Xi is the
@@ -425,8 +426,7 @@ class FeT(nn.Module):
                 i if i < self.primary_party_id else i + 1
                 for i in malicious_indices.tolist()
             ]
-            tqdm.write(f"[Byzantine Detection] Malicious parties: {real_party_ids}")
-
+            print(f"[Byzantine Detection] Malicious parties detected: {real_party_ids}")
 
 
 
