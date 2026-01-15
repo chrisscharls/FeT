@@ -394,6 +394,8 @@ class FeT(nn.Module):
         # key_X_embeds[self.primary_party_id] = primary_key_X_embed.repeat(1, self.k, 1)
         secondary_key_X_embeds = [key_X_embeds[i] for i in range(self.n_parties) if i != self.primary_party_id]
 
+        
+
         if self.byzantine_attacker is not None:
             from src.attack import apply_byzantine_attack
             secondary_key_X_embeds = apply_byzantine_attack(
@@ -402,6 +404,31 @@ class FeT(nn.Module):
                 primary_party_id=self.primary_party_id,
                 n_parties=self.n_parties
             )
+        party_norms = []
+        for i, rep in enumerate(secondary_key_X_embeds):
+            rep_flat = rep.reshape(rep.shape[0], -1)
+            norm = torch.norm(rep_flat, dim=1).mean()  # average over batch
+            party_norms.append(norm)
+
+        party_norms_tensor = torch.stack(party_norms)
+
+        median = torch.median(party_norms_tensor)
+        mad = torch.median(torch.abs(party_norms_tensor - median)) + 1e-6
+
+        z_scores = torch.abs(party_norms_tensor - median) / mad
+
+        threshold = 3.5  # robust z-score threshold
+        malicious_indices = torch.where(z_scores > threshold)[0]
+
+        if len(malicious_indices) > 0:
+            real_party_ids = [
+                i if i < self.primary_party_id else i + 1
+                for i in malicious_indices.tolist()
+            ]
+            print(f"[Byzantine Detection] Malicious parties detected: {real_party_ids}")
+
+
+
 
         # dropout self.dropout number of parties
         if self.training and not np.isclose(self.party_dropout, 0):
