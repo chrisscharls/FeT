@@ -425,7 +425,8 @@ class FeT(nn.Module):
                 i if i < self.primary_party_id else i + 1
                 for i in malicious_indices.tolist()
             ]
-            print(f"[Byzantine Detection] Malicious parties detected: {real_party_ids}")
+            tqdm.write(f"[Byzantine Detection] Malicious parties: {real_party_ids}")
+
 
 
 
