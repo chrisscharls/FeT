@@ -447,9 +447,6 @@ class FeT(nn.Module):
         else:
             cut_layer_key_X = torch.sum(torch.stack(secondary_key_X_embeds), dim=0)
 
-            # Apply Byzantine attack AFTER aggregation of secondary parties (on the summed secondary representation)
-            if self.byzantine_attacker is not None:
-                cut_layer_key_X = self.byzantine_attacker.attack_representation(cut_layer_key_X)
 
         # primary party aggregates the embedding with primary_attn from summed (possibly attacked) secondary keys and data
         agg_key_X_embed = self.agg_attn(primary_key_X_embed,
