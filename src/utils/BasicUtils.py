@@ -4,7 +4,8 @@ from typing import Callable
 
 
 import torch
-from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, mean_squared_error, r2_score, log_loss
+import numpy as np
 
 from src.metric.RMSE import RMSE
 
@@ -94,25 +95,47 @@ def get_device_from_gpu_id(gpu_id):
 
 
 def get_metric_from_str(metric) -> Callable:
-    supported_list = ['acc', 'rmse', 'r2']
-    assert metric in supported_list
+    supported_list = ['acc', 'rmse', 'r2', 'ce']
+    assert metric in supported_list, f"Metric {metric} not supported. Use one of {supported_list}"
+
     if metric == 'acc':
         return accuracy_score
+
     elif metric == 'rmse':
         return lambda y_true, y_pred: RMSE()(y_true, y_pred)
+
     elif metric == 'r2':
         return r2_score
+
+    elif metric == 'ce':
+        # Cross-Entropy / Log Loss (binary classification)
+        def ce_metric(y_true, y_pred):
+            y_true = np.array(y_true).reshape(-1)
+
+            # y_pred may be logits or probabilities
+            y_pred = np.array(y_pred).reshape(-1)
+
+            # numerical stability
+            eps = 1e-12
+            y_pred = np.clip(y_pred, eps, 1 - eps)
+
+            return log_loss(y_true, y_pred)
+
+        return ce_metric
+
     else:
         raise NotImplementedError(f"Metric {metric} is not implemented. metric should be in {supported_list}")
 
 
+
 def get_metric_positive_from_str(metric) -> bool:
-    supported_list = ['acc', 'rmse', 'r2']
+    supported_list = ['acc', 'rmse', 'r2', 'ce']
     assert metric in supported_list
+
     if metric in ['acc', 'r2']:
-        return True
-    elif metric in ['rmse']:
-        return False
+        return True      # higher is better
+    elif metric in ['rmse', 'ce']:
+        return False     # lower is better
     else:
         raise NotImplementedError(f"Metric {metric} is not implemented. metric should be in {supported_list}")
 
