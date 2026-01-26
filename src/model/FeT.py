@@ -420,8 +420,8 @@ class FeT(nn.Module):
 
         z_scores = torch.abs(party_norms_tensor - median) / mad
    
-        threshold = torch.quantile(z_scores, 0.85)
-        malicious_indices = torch.where(z_scores > threshold)[0]
+        rel_dev = torch.abs(party_norms_tensor - median) / (median + 1e-6)
+        malicious_indices = torch.where(rel_dev > threshold)[0]
 
 
         if len(malicious_indices) > 0:
