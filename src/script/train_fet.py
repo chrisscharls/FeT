@@ -215,13 +215,6 @@ if __name__ == '__main__':
     
 
 
-    # Create attacker
-    attacker = ByzantineAttacker(
-        strategy=AttackStrategy.SIGN_FLIP,  # or SIGN_FLIP, RANDOM_NOISE, etc.
-        attack_strength=1.0,
-        malicious_parties=[1, 2, 3, 4]  # Which parties are malicious
-    )
-
     model = FeT(key_dims=train_dataset.local_key_channels, data_dims=train_dataset.local_input_channels,
                 out_dim=out_dim, data_embed_dim=args.data_embed_dim,
                 key_embed_dim=args.key_embed_dim,
