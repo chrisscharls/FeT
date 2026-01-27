@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     # Create attacker
     attacker = ByzantineAttacker(
-        strategy=AttackStrategy.ZERO,  # or SIGN_FLIP, RANDOM_NOISE, etc.
+        strategy=AttackStrategy.SIGN_FLIP,  # or SIGN_FLIP, RANDOM_NOISE, etc.
         attack_strength=1.0,
         malicious_parties=[1, 2]  # Which parties are malicious
     )
