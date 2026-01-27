@@ -223,7 +223,7 @@ if __name__ == '__main__':
                 n_embeddings=None, out_activation=out_activation,
                 n_local_blocks=args.n_local_blocks, n_agg_blocks=args.n_agg_blocks, k=args.knn_k,
                 rep_noise=args.dp_noise, max_rep_norm=args.dp_clip, enable_pe=not args.disable_pe,
-                enable_dm=not args.disable_dm, byzantine_attacker=attacker)
+                enable_dm=not args.disable_dm)
     # model = torch.compile(model)
 
     # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
