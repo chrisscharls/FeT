@@ -218,8 +218,8 @@ if __name__ == '__main__':
     # Create attacker
     attacker = ByzantineAttacker(
         strategy=AttackStrategy.SIGN_FLIP,  # More aggressive: SCALE_UP, SIGN_FLIP, or GAUSSIAN
-        attack_strength=50.0,  # Increase strength significantly
-        malicious_parties=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14,15,16]  # Attack ALL secondary parties (or specify more parties)
+        attack_strength=60.0,  # Increase strength significantly
+        malicious_parties=[1, 2, 3, 4]  # Attack ALL secondary parties (or specify more parties)
     )
 
     model = FeT(key_dims=train_dataset.local_key_channels, data_dims=train_dataset.local_input_channels,
