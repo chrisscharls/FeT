@@ -218,7 +218,7 @@ if __name__ == '__main__':
     # Create attacker
     attacker = ByzantineAttacker(
         strategy=AttackStrategy.SIGN_FLIP,  # More aggressive: SCALE_UP, SIGN_FLIP, or GAUSSIAN
-        attack_strength=50.0,  # Increase strength significantly
+        attack_strength=20.0,  # Increase strength significantly
         malicious_parties=[1, 2, 3, 4]  # Attack ALL secondary parties (or specify more parties)
     )
 
