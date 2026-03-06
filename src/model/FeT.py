@@ -333,6 +333,50 @@ class FeT(nn.Module):
                 raise ValueError(f"The #features of the {i}-th feature tensor {X.shape[-1]} should be the same as "
                                  f"the feature dimension {X_dim} of the same party.")
 
+
+    def _multikrum_select(self, embeds, n_select=None, n_byzantine=None):
+        """
+        Multi-Krum selection of embeddings.
+        
+        :param embeds: list of tensors, each of shape (seq_len, batch, embed_dim) or similar
+        :param n_select: how many parties to keep (m in Multi-Krum). Defaults to n_parties // 2 + 1
+        :param n_byzantine: assumed max number of Byzantine parties (f). Defaults to n_parties // 4
+        :return: (selected_embeds, selected_indices, rejected_indices)
+        """
+        n = len(embeds)
+        if n_select is None:
+            n_select = max(1, n // 2 + 1)
+        if n_byzantine is None:
+            n_byzantine = max(0, n // 4)
+
+        # Flatten each embed to a 1D vector per party for distance computation
+        flat = [e.reshape(-1) for e in embeds]  # list of 1D tensors
+
+        # Compute pairwise squared distances
+        dist_matrix = torch.zeros(n, n, device=flat[0].device)
+        for i in range(n):
+            for j in range(i + 1, n):
+                d = torch.sum((flat[i] - flat[j]) ** 2)
+                dist_matrix[i, j] = d
+                dist_matrix[j, i] = d
+
+        # For each party, sum distances to its (n - n_byzantine - 2) nearest neighbors
+        n_neighbors = max(1, n - n_byzantine - 2)
+        scores = torch.zeros(n, device=flat[0].device)
+        for i in range(n):
+            dists_i = dist_matrix[i].clone()
+            dists_i[i] = float('inf')  # exclude self
+            nearest, _ = torch.topk(dists_i, k=n_neighbors, largest=False)
+            scores[i] = nearest.sum()
+
+        # Select top-m parties with lowest scores (most similar to neighbors)
+        selected_indices = torch.topk(scores, k=n_select, largest=False).indices.tolist()
+        rejected_indices = [i for i in range(n) if i not in selected_indices]
+
+        selected_embeds = [embeds[i] for i in selected_indices]
+        return selected_embeds, selected_indices, rejected_indices
+
+
     def forward(self, key_Xs, visualize=True):
    
         """
@@ -407,31 +451,17 @@ class FeT(nn.Module):
                 primary_party_id=self.primary_party_id,
                 n_parties=self.n_parties
             )
-        party_norms = []
-        for i, rep in enumerate(secondary_key_X_embeds):
-            rep_flat = rep.reshape(rep.shape[0], -1)
-            norm = torch.norm(rep_flat, dim=1).mean()  # average over batch
-            party_norms.append(norm)
-
-        party_norms_tensor = torch.stack(party_norms)
-
-        median = torch.median(party_norms_tensor)
-        mad = torch.median(torch.abs(party_norms_tensor - median)) + 1e-6
-
-        z_scores = torch.abs(party_norms_tensor - median) / mad
-   
-        rel_dev = torch.abs(party_norms_tensor - median) / (median + 1e-6)
-        malicious_indices = torch.where(rel_dev > 0.5)[0]
-
-
-        if len(malicious_indices) > 0:
-            real_party_ids = [
-                i if i < self.primary_party_id else i + 1
-                for i in malicious_indices.tolist()
-            ]
-            self.detected_malicious.update(real_party_ids)
-
-
+        # ========== MULTI-KRUM SELECTION ==========
+        if len(secondary_key_X_embeds) > 1:
+            secondary_key_X_embeds, selected_indices, rejected_indices = self._multikrum_select(
+                secondary_key_X_embeds
+            )
+            secondary_ids = [i for i in range(self.n_parties) if i != self.primary_party_id]
+            rejected_real_ids = [secondary_ids[i] for i in rejected_indices]
+            if rejected_real_ids:
+                self.detected_malicious.update(rejected_real_ids)
+                print(f"[Multi-Krum] Detected malicious parties: {rejected_real_ids}")
+                print(f"[Multi-Krum] Trusted parties: {[secondary_ids[i] for i in selected_indices]}")
 
 
         # dropout self.dropout number of parties
