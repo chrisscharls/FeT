@@ -476,8 +476,8 @@ class FeT(nn.Module):
             drop_mask = torch.ones(self.n_parties - 1)
             drop_mask[drop_party_indices] = 0.
             drop_mask = drop_mask.to(primary_key_X_embed.device)
-            secondary_key_X_embeds = [drop_mask[i] * secondary_key_X_embeds[i]
-                                      for i in range(self.n_parties - 1)]
+            secondary_key_X_embeds = [drop_mask[selected_indices[i]] * secondary_key_X_embeds[i]
+                          for i in range(len(secondary_key_X_embeds))]
         else:
             n_drop_parties = 0
 
