@@ -460,9 +460,6 @@ class FeT(nn.Module):
             rejected_real_ids = [secondary_ids[i] for i in rejected_indices]
             if rejected_real_ids:
                 self.detected_malicious.update(rejected_real_ids)
-                print(f"[Multi-Krum] Detected malicious parties: {rejected_real_ids}")
-                print(f"[Multi-Krum] Trusted parties: {[secondary_ids[i] for i in selected_indices]}")
-
 
         # dropout self.dropout number of parties
         if self.training and not np.isclose(self.party_dropout, 0):
