@@ -357,10 +357,6 @@ class FeT(nn.Module):
         gap_idx = torch.argmax(gaps).item()
         n_select = gap_idx + 1
 
-        print(f"[MultiKrum] n={n}, n_select={n_select}, n_rejected={n-n_select}")
-        print(f"[MultiKrum] sorted scores: {sorted_scores.tolist()}")
-        print(f"[MultiKrum] gaps: {gaps.tolist()}")
-
         selected_indices = sorted_order[:n_select].tolist()
         rejected_indices = sorted_order[n_select:].tolist()
         selected_embeds = [embeds[i] for i in selected_indices]
