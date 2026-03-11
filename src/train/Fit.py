@@ -103,6 +103,9 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
         best_test_score = np.inf
 
     for epoch in range(epochs):
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
         model.train()
         train_pred_y = train_y = torch.zeros([0, 1], device=device)
         train_loss = 0
@@ -128,6 +131,7 @@ def fit(model, optimizer, loss_fn, metric_fn, train_loader, test_loader=None, ep
             train_y = torch.cat([train_y, y.reshape(-1, 1)], dim=0)
             loss.backward()
             optimizer.step()
+            torch.cuda.empty_cache()
 
         train_y_array = train_y.data.cpu().numpy()
         train_pred_y_array = train_pred_y.data.cpu().numpy()
