@@ -336,16 +336,17 @@ class FeT(nn.Module):
 
     def _multikrum_select(self, embeds):
         n = len(embeds)
-        flat = [e.reshape(-1) for e in embeds]
+        # Move to CPU for distance computation to save GPU memory
+        flat = [e.reshape(-1).detach().cpu().float() for e in embeds]
 
-        dist_matrix = torch.zeros(n, n, device=flat[0].device)
+        dist_matrix = torch.zeros(n, n)  # stays on CPU
         for i in range(n):
             for j in range(i + 1, n):
                 d = torch.sum((flat[i] - flat[j]) ** 2)
                 dist_matrix[i, j] = d
                 dist_matrix[j, i] = d
 
-        scores = torch.zeros(n, device=flat[0].device)
+        scores = torch.zeros(n)
         for i in range(n):
             dists_i = dist_matrix[i].clone()
             dists_i[i] = float('inf')
@@ -357,11 +358,12 @@ class FeT(nn.Module):
         gap_idx = torch.argmax(gaps).item()
         n_select = gap_idx + 1
 
+        print(f"[MultiKrum] n={n}, n_select={n_select}, n_rejected={n - n_select}")
+
         selected_indices = sorted_order[:n_select].tolist()
         rejected_indices = sorted_order[n_select:].tolist()
-        selected_embeds = [embeds[i] for i in selected_indices]
+        selected_embeds = [embeds[i] for i in selected_indices]  # return original GPU tensors
         return selected_embeds, selected_indices, rejected_indices
-
     def forward(self, key_Xs, visualize=True):
    
         """
