@@ -334,11 +334,10 @@ class FeT(nn.Module):
                                  f"the feature dimension {X_dim} of the same party.")
 
 
-    def _multikrum_select(self, embeds, n_select=None, n_byzantine=None):
+    def _multikrum_select(self, embeds):
         n = len(embeds)
         flat = [e.reshape(-1) for e in embeds]
 
-        # Compute pairwise squared distances
         dist_matrix = torch.zeros(n, n, device=flat[0].device)
         for i in range(n):
             for j in range(i + 1, n):
@@ -346,44 +345,26 @@ class FeT(nn.Module):
                 dist_matrix[i, j] = d
                 dist_matrix[j, i] = d
 
-        # Auto-detect n_byzantine if not provided:
-        # Try each candidate f from 0 to n//2 - 1, pick the f whose resulting
-        # score distribution has the lowest variance (most stable / consistent clustering)
-        if n_byzantine is None:
-            best_f = 0
-            best_variance = float('inf')
-            for f_candidate in range(0, n // 2):
-                n_neighbors_candidate = max(1, n - f_candidate - 2)
-                scores_candidate = torch.zeros(n, device=flat[0].device)
-                for i in range(n):
-                    dists_i = dist_matrix[i].clone()
-                    dists_i[i] = float('inf')
-                    nearest, _ = torch.topk(dists_i, k=n_neighbors_candidate, largest=False)
-                    scores_candidate[i] = nearest.sum()
-                variance = torch.var(scores_candidate).item()
-                if variance < best_variance:
-                    best_variance = variance
-                    best_f = f_candidate
-            n_byzantine = best_f
-            print(f"n_byzantine={n_byzantine}, n_select={max(1, n - n_byzantine)}, n={n}")
-
-        if n_select is None:
-            n_select = max(1, n - n_byzantine)
-
-        # Final scoring with detected n_byzantine
-        n_neighbors = max(1, n - n_byzantine - 2)
         scores = torch.zeros(n, device=flat[0].device)
         for i in range(n):
             dists_i = dist_matrix[i].clone()
             dists_i[i] = float('inf')
-            nearest, _ = torch.topk(dists_i, k=n_neighbors, largest=False)
+            nearest, _ = torch.topk(dists_i, k=max(1, n - 2), largest=False)
             scores[i] = nearest.sum()
 
-        selected_indices = torch.topk(scores, k=n_select, largest=False).indices.tolist()
-        rejected_indices = [i for i in range(n) if i not in selected_indices]
+        sorted_scores, sorted_order = torch.sort(scores)
+        gaps = sorted_scores[1:] - sorted_scores[:-1]
+        gap_idx = torch.argmax(gaps).item()
+        n_select = gap_idx + 1
+
+        print(f"[MultiKrum] n={n}, n_select={n_select}, n_rejected={n-n_select}")
+        print(f"[MultiKrum] sorted scores: {sorted_scores.tolist()}")
+        print(f"[MultiKrum] gaps: {gaps.tolist()}")
+
+        selected_indices = sorted_order[:n_select].tolist()
+        rejected_indices = sorted_order[n_select:].tolist()
         selected_embeds = [embeds[i] for i in selected_indices]
         return selected_embeds, selected_indices, rejected_indices
-    
 
     def forward(self, key_Xs, visualize=True):
    
