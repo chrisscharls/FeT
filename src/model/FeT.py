@@ -365,7 +365,7 @@ class FeT(nn.Module):
                     best_variance = variance
                     best_f = f_candidate
             n_byzantine = best_f
-            print(n_byzantine)
+            print(f"n_byzantine={n_byzantine}, n_select={max(1, n - n_byzantine)}, n={n}")
 
         if n_select is None:
             n_select = max(1, n - n_byzantine)
